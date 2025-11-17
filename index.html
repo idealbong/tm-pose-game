@@ -621,7 +621,6 @@
         document.getElementById("level-display").textContent = currentLevel;
         document.getElementById("success-count").textContent = successCount;
         document.getElementById("fail-count").textContent = failCount;
-        document.getElementById("time-limit").textContent = timeLimit.toFixed(1);
       }
 
       // Start timer bar animation
@@ -779,6 +778,44 @@
         }, delay);
       }
 
+      // Create confetti animation
+      function createConfetti() {
+        const overlay = document.getElementById("level-up-overlay");
+        const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE'];
+
+        for (let i = 0; i < 50; i++) {
+          const confetti = document.createElement('div');
+          confetti.className = 'confetti';
+          confetti.style.left = Math.random() * 100 + '%';
+          confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.animationDelay = Math.random() * 0.5 + 's';
+          confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+          overlay.appendChild(confetti);
+
+          // Remove confetti after animation
+          setTimeout(() => {
+            confetti.remove();
+          }, 3000);
+        }
+      }
+
+      // Show level up overlay
+      function showLevelUpOverlay(level) {
+        const overlay = document.getElementById("level-up-overlay");
+        const message = document.getElementById("level-up-message");
+
+        message.textContent = `레벨 ${level} 달성!`;
+        overlay.classList.add("show");
+
+        // Create confetti
+        createConfetti();
+
+        // Hide overlay after 2 seconds
+        setTimeout(() => {
+          overlay.classList.remove("show");
+        }, 2000);
+      }
+
       // End current round and check for level up
       function endRound() {
         const display = document.getElementById("command-display");
@@ -788,12 +825,12 @@
           currentLevel++;
           timeLimit = getTimeLimit(currentLevel);
 
-          display.textContent = `🎉 레벨 ${currentLevel}로 승급!`;
-          display.className = "command-display success";
+          // Show level up overlay with confetti
+          showLevelUpOverlay(currentLevel);
 
           setTimeout(() => {
             startNewRound();
-          }, 2000);
+          }, 2500);
         } else {
           // Game over - save record and show game over screen
           gameActive = false;
@@ -943,28 +980,52 @@
         const startBtn = document.getElementById("startBtn");
         const stopBtn = document.getElementById("stopBtn");
 
+        // Stop all game activities
         isRunning = false;
         gameActive = false;
 
+        // Cancel animation frame
         if (animationId) {
           window.cancelAnimationFrame(animationId);
           animationId = null;
         }
 
+        // Stop webcam
         if (webcam) {
           webcam.stop();
         }
 
-        if (commandTimer) clearTimeout(commandTimer);
+        // Clear all timers
+        if (commandTimer) {
+          clearTimeout(commandTimer);
+          commandTimer = null;
+        }
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+
+        // Reset timer bar
         resetTimerBar();
 
+        // Reset hand states
         leftHandUp = false;
         rightHandUp = false;
         updateFlags();
 
+        // Reset result indicator
+        const resultIndicator = document.getElementById("result-indicator");
+        resultIndicator.className = "result-indicator";
+
+        // Hide level up overlay if showing
+        const levelUpOverlay = document.getElementById("level-up-overlay");
+        levelUpOverlay.classList.remove("show");
+
+        // Reset UI
         document.getElementById("command-display").textContent = "게임 시작 버튼을 눌러주세요";
         document.getElementById("command-display").className = "command-display";
 
+        // Enable/disable buttons
         startBtn.disabled = false;
         stopBtn.disabled = true;
       }
