@@ -1,43 +1,94 @@
-# Teachable Machine Pose Model Template
+# 🚩 AI 청기백기 챌린지
 
-Teachable Machine에서 학습한 Pose 모델을 웹에서 테스트할 수 있는 템플릿입니다.
+Teachable Machine 포즈 인식 모델을 활용한 **실시간 청기백기 게임**입니다.
 
 ## 📋 개요
 
-이 프로젝트는 학생들이 [Teachable Machine](https://teachablemachine.withgoogle.com/)에서 포즈 인식 모델을 학습한 후, 해당 모델을 GitHub에 업로드하고 GitHub Pages를 통해 실시간으로 테스트할 수 있도록 만들어진 템플릿입니다.
+이 프로젝트는 [Teachable Machine](https://teachablemachine.withgoogle.com/)으로 학습한 손동작 인식 모델을 사용하여, 청기백기 게임을 플레이할 수 있는 웹 애플리케이션입니다. 난이도가 점점 올라가는 레벨 시스템과 정확한 타이밍을 요구하는 챌린징한 게임플레이를 제공합니다.
 
-### 현재 포함된 예시 모델
+### 현재 포함된 모델
 
-이 저장소에는 **얼굴 방향 인식 모델**이 포함되어 있습니다:
-- **왼쪽**: 얼굴이 왼쪽을 바라볼 때
-- **오른쪽**: 얼굴이 오른쪽을 바라볼 때
-- **정면**: 얼굴이 정면을 바라볼 때
-- **위**: 얼굴이 위를 바라볼 때
-- **아래**: 얼굴이 아래를 바라볼 때
+이 저장소에는 **손동작 인식 모델**이 포함되어 있습니다:
+- **왼손올려**: 왼손을 올릴 때 (백기)
+- **오른손올려**: 오른손을 올릴 때 (청기)
+- **양손 올려**: 양손을 모두 올릴 때 (양기)
+- **기본**: 기본 자세 (올리지 마 명령용)
 
-이 모델은 데모용이며, 자신만의 포즈 인식 모델로 교체하여 사용할 수 있습니다.
+## 🎮 게임 규칙
 
-## 🚀 사용 방법
+### 레벨 시스템
 
-### 1. Teachable Machine에서 모델 학습 및 다운로드
+#### 기본 구조
+- **1단계부터 시작**
+- 각 단계는 **명령 5회**로 구성
+- **5회 중 4회 이상 성공하면 다음 단계로 승급**
+- 실패 시 게임 오버
 
-1. [Teachable Machine](https://teachablemachine.withgoogle.com/)에 접속
-2. "Pose Project" 선택
-3. 원하는 포즈들을 학습
-4. "Export Model" → "Download" 선택하여 모델 파일 다운로드
+#### 난이도 조절
+단계가 올라갈수록 반응 제한 시간이 짧아집니다:
 
-### 2. 모델 파일 추가
+| 단계 | 제한 시간 |
+|------|-----------|
+| 1단계 | 1.5초 |
+| 2단계 | 1.4초 |
+| 3단계 | 1.3초 |
+| 4단계 | 1.2초 |
+| 5단계 | 1.1초 |
+| 6단계 | 1.0초 |
+| 7단계 이상 | **0.9초 (최소)** |
 
-다운로드한 모델 파일을 `my_model/` 폴더에 넣어주세요:
-- `my_model/model.json`
-- `my_model/weights.bin`
-- `my_model/metadata.json`
+### 게임 플레이
 
-### 3. 로컬에서 테스트
+#### 명령 종류
+게임에서는 다음 6가지 명령이 가중치에 따라 랜덤으로 음성과 화면으로 출력됩니다:
+
+**올리기 명령 (각 1/4 확률):**
+- **"백기 올려!"** 🏳️ - 왼손만 올리기
+- **"청기 올려!"** 🚩 - 오른손만 올리기
+- **"양기 올려!"** 🙌 - 양손 모두 올리기 (양쪽 깃발 올려의 준말)
+
+**올리지 않기 명령 (각 1/12 확률):**
+- **"백기 올리지 마!"** 🚫 - 왼손을 올리면 안됨 (오른손만 가능 또는 둘 다 안 올림)
+- **"청기 올리지 마!"** 🚫 - 오른손을 올리면 안됨 (왼손만 가능 또는 둘 다 안 올림)
+- **"양기 올리지 마!"** 🚫 - 양손 모두 올리면 안됨 (한 손만 가능 또는 둘 다 안 올림)
+
+> 💡 **TTS 기능**: 모든 명령은 한국어 음성으로 자동 읽어줍니다!
+> ⚠️ **주의**: "올리지 마" 명령은 해당 동작을 하지 않으면 성공입니다!
+
+#### 성공 조건
+
+**"올려" 명령 (백기/청기/양기 올려):**
+1. 정확한 포즈를 **0.2초 연속** 유지해야 성공
+   - 백기 올려: 왼손만 올림 (오른손은 내림)
+   - 청기 올려: 오른손만 올림 (왼손은 내림)
+   - 양기 올려: 양손 모두 올림
+2. 제한 시간 내에 0.2초를 채우지 못하면 실패
+3. 포즈 인식 임계값: 75% 이상 확률로 해당 클래스 판정
+
+**"올리지 마" 명령 (백기/청기/양기 올리지 마):**
+1. 제한 시간이 **모두 경과할 때까지** 금지 동작을 하지 않으면 성공
+2. 금지 동작이 **한 번이라도** 감지되면 즉시 실패
+   - 백기 올리지 마: 왼손을 올리는 순간 실패 (오른손은 상관없음)
+   - 청기 올리지 마: 오른손을 올리는 순간 실패 (왼손은 상관없음)
+   - 양기 올리지 마: 양손을 동시에 올리는 순간 실패 (한 손만 올리는 것은 허용)
+3. 시간이 끝나면 자동으로 성공 처리
+
+**판정 기준:**
+- 포즈 인식 임계값: 확률 **0.75 (75%)** 이상
+- 안정화 시간: **200ms (0.2초)** 연속 인식
+- 잘못된 동작 또는 시간 초과 시 실패 처리
+
+#### 게임 템포
+- 명령 간 간격: **0.5~1.0초 랜덤**
+- 같은 명령 **3회 연속 금지**
+
+## 🚀 시작하기
+
+### 로컬에서 실행
 
 브라우저 보안 정책으로 인해 로컬 웹 서버가 필요합니다.
 
-**Python 사용 (Python 3):**
+**Python 사용:**
 ```bash
 python3 -m http.server 8000
 ```
@@ -49,59 +100,148 @@ npx http-server -p 8000
 
 **VS Code 사용:**
 - Live Server 확장 프로그램 설치
-- index.html 우클릭 → "Open with Live Server"
+- [index.html](index.html) 우클릭 → "Open with Live Server"
 
 브라우저에서 `http://localhost:8000` 접속
 
-### 4. GitHub Pages로 배포
+### GitHub Pages로 배포
 
-1. 이 저장소를 자신의 GitHub 계정으로 Fork 또는 복사
-2. 모델 파일을 `my_model/` 폴더에 추가
-3. GitHub 저장소 설정에서 Pages 활성화:
-   - Settings → Pages
-   - Source: Deploy from a branch
-   - Branch: main / (root) 선택
-   - Save
-4. 몇 분 후 `https://<username>.github.io/<repository-name>/`에서 접속 가능
+1. 이 저장소를 Fork
+2. Settings → Pages에서 활성화
+3. `https://<username>.github.io/<repository-name>/`에서 접속
+
+## 🎯 게임 팁
+
+1. **웹캠 위치**: 상체 전체가 보이도록 웹캠 조정
+2. **조명**: 밝은 환경에서 플레이하면 인식률 향상
+3. **동작 크기**: 손을 확실하게 올리세요
+4. **반응 연습**: 초반 레벨에서 타이밍 감각 익히기
+5. **집중력**: 높은 레벨일수록 빠른 판단력이 필요합니다
+6. **음성 청취**: 음성 명령을 듣고 빠르게 반응하면 더 몰입감 있는 플레이가 가능합니다
+7. **양기 명령**: "양기 올려!" 명령은 반드시 양손을 모두 올려야 성공합니다
+8. **올리지 마 명령**:
+   - "백기 올리지 마!" → 왼손만 안 올리면 성공 (오른손은 올려도 됨)
+   - "청기 올리지 마!" → 오른손만 안 올리면 성공 (왼손은 올려도 됨)
+   - "양기 올리지 마!" → 양손을 동시에 올리지 않으면 성공 (한 손만 올려도 됨)
+9. **확률 전략**: "올려" 명령이 "올리지 마" 명령보다 3배 더 자주 나옵니다
 
 ## ✨ 주요 기능
 
-- ✅ 실시간 웹캠 포즈 인식
-- ✅ 포즈 스켈레톤 및 키포인트 시각화
-- ✅ 예측 결과 확률 표시
-- ✅ 최고 확률 클래스 강조 표시
-- ✅ Start/Stop 버튼으로 웹캠 제어
+- 🎮 레벨별 난이도 조절 시스템
+- ⏱️ 실시간 타이머 및 시각적 피드백
+- 📊 성공/실패 통계 표시
+- 🎯 정확한 포즈 인식 (0.2초 안정화)
+- 🎨 직관적인 UI/UX
+- 🚩 실시간 깃발 애니메이션
+- 🔊 **음성 명령 출력 (TTS)** - 명령을 소리로 들을 수 있습니다!
 
 ## 🛠 기술 스택
 
-- TensorFlow.js 1.3.1
-- Teachable Machine Pose Library 0.8
-- Vanilla JavaScript
-- HTML5 Canvas
+- **AI/ML**: TensorFlow.js 1.3.1, Teachable Machine Pose 0.8
+- **Frontend**: Vanilla JavaScript, HTML5, CSS3
+- **Graphics**: HTML5 Canvas
+- **Audio**: Web Speech API (TTS)
 
 ## 📁 프로젝트 구조
 
 ```
-tm-pose-template/
-├── index.html          # 메인 웹 페이지
-├── my_model/           # Teachable Machine 모델 파일 위치
+tm-pose-game/
+├── index.html          # 메인 게임 페이지
+├── my_model/           # Teachable Machine 모델
 │   ├── model.json
 │   ├── weights.bin
 │   └── metadata.json
 └── README.md
 ```
 
+## 🔧 커스터마이징
+
+### 자신만의 모델 사용하기
+
+1. [Teachable Machine](https://teachablemachine.withgoogle.com/)에서 Pose Project 생성
+2. 원하는 동작들을 학습
+3. "Export Model" → "Download" 선택
+4. 다운로드한 파일을 `my_model/` 폴더에 교체
+
+### 게임 난이도 조정
+
+[index.html](index.html)에서 다음 변수들을 수정:
+
+```javascript
+let totalRounds = 5;                    // 각 단계당 라운드 수
+let minSuccessForNextLevel = 4;         // 승급에 필요한 성공 횟수
+let requiredStableDuration = 200;       // 안정화 시간 (ms)
+const THRESHOLD = 0.75;                 // 인식 확률 임계값
+
+function getTimeLimit(level) {
+  const baseTime = 1.5;                 // 기본 시간
+  const reduction = (level - 1) * 0.1;  // 단계별 감소량
+  return Math.max(0.9, baseTime - reduction); // 최소 시간
+}
+```
+
+### 명령 확률 조정
+
+명령 출현 확률을 변경하려면 `COMMANDS` 객체의 `weight` 값을 수정하세요:
+
+```javascript
+const COMMANDS = {
+  LEFT_HAND: { text: "백기 올려!", weight: 3 },    // 1/4 확률
+  RIGHT_HAND: { text: "청기 올려!", weight: 3 },   // 1/4 확률
+  BOTH_HANDS: { text: "양기 올려!", weight: 3 },   // 1/4 확률
+  DONT_LEFT: { text: "백기 올리지 마!", weight: 1 },  // 1/12 확률
+  DONT_RIGHT: { text: "청기 올리지 마!", weight: 1 }, // 1/12 확률
+  DONT_BOTH: { text: "양기 올리지 마!", weight: 1 }   // 1/12 확률
+};
+```
+
+**예시:**
+- 모든 명령 동일 확률: 모든 `weight`를 1로 설정
+- "올리지 마" 명령 없애기: 해당 명령의 `weight`를 0으로 설정
+
+### TTS (음성) 설정 조정
+
+[index.html](index.html)의 `speak()` 함수에서 음성 설정을 변경할 수 있습니다:
+
+```javascript
+function speak(text) {
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'ko-KR';    // 언어 설정
+  utterance.rate = 1.2;        // 속도 (0.1~10, 기본: 1)
+  utterance.pitch = 1.0;       // 음높이 (0~2, 기본: 1)
+  utterance.volume = 1.0;      // 볼륨 (0~1, 기본: 1)
+
+  window.speechSynthesis.speak(utterance);
+}
+```
+
+**추천 설정:**
+- 더 빠른 게임: `rate = 1.5`
+- 더 느린 게임: `rate = 0.8`
+- 음성 끄기: `speak()` 함수 호출 부분 주석 처리
+
 ## 🎓 교육 활용
 
-이 템플릿은 다음과 같은 교육 목적으로 활용할 수 있습니다:
+이 프로젝트는 다음과 같은 학습 목적으로 활용할 수 있습니다:
 
-- 머신러닝/AI 기초 학습
-- 포즈 인식 기술 이해
-- 웹 개발 실습
-- GitHub 및 버전 관리 학습
-- GitHub Pages를 통한 배포 경험
+- 🧠 머신러닝/AI 기초 학습
+- 👁️ 컴퓨터 비전 및 포즈 인식 이해
+- 💻 웹 개발 (JavaScript, HTML, CSS)
+- 🎮 게임 로직 설계 및 구현
+- 📱 실시간 인터랙티브 애플리케이션 개발
 
-## 👨‍💻 만든 사람
+## 🏆 도전 과제
+
+게임을 더 재미있게 만들어보세요!
+
+- 🥇 **레벨 10 달성**: 0.9초 반응 속도 마스터
+- 🥈 **완벽한 라운드**: 5회 모두 성공
+- 🥉 **스피드 런**: 최단 시간 내 특정 레벨 도달
+- 🎯 **정확도 마스터**: 실패 없이 연속 성공
+
+## 👨‍💻 개발자
 
 **Sangbong Lee**
 - Email: idealbong@gmail.com
@@ -109,3 +249,7 @@ tm-pose-template/
 ## 📝 라이선스
 
 이 프로젝트는 교육 목적으로 자유롭게 사용 가능합니다.
+
+---
+
+**즐거운 게임 되세요! 🎮🚩**

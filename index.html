@@ -2,7 +2,7 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <title>Teachable Machine Pose Model</title>
+    <title>청기백기 게임</title>
     <style>
       body {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -13,76 +13,473 @@
         min-height: 100vh;
         margin: 0;
         padding: 20px;
-        gap: 16px;
+        gap: 20px;
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
       }
       h1 {
         margin: 0;
+        font-size: 48px;
+        color: white;
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+        font-weight: bold;
+      }
+      .instructions {
+        color: white;
+        background-color: rgba(0, 0, 0, 0.2);
+        padding: 20px;
+        border-radius: 12px;
+        max-width: 800px;
+        text-align: center;
+      }
+      .instructions h3 {
+        margin-top: 0;
         font-size: 24px;
       }
       .button-container {
         display: flex;
-        gap: 10px;
+        gap: 15px;
       }
       button {
-        padding: 10px 20px;
-        font-size: 16px;
+        padding: 15px 30px;
+        font-size: 18px;
         cursor: pointer;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        background-color: #fff;
+        border: none;
+        border-radius: 8px;
+        background-color: #4CAF50;
+        color: white;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
       }
       button:hover {
-        background-color: #f0f0f0;
+        background-color: #45a049;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
       }
       button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+        transform: none;
       }
-      .canvas-container {
+      #stopBtn {
+        background-color: #f44336;
+      }
+      #stopBtn:hover {
+        background-color: #da190b;
+      }
+      .game-container {
+        display: flex;
+        gap: 30px;
+        align-items: center;
+        justify-content: center;
+      }
+      .flag-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+      .flag-label {
+        font-size: 24px;
+        font-weight: bold;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      .flag {
+        width: 100px;
+        height: 200px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         position: relative;
-        display: inline-block;
+      }
+      .flag-pole {
+        width: 8px;
+        height: 200px;
+        background: linear-gradient(to bottom, #8b4513, #654321);
+        border-radius: 4px;
+        box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      .flag-cloth {
+        width: 80px;
+        height: 60px;
+        position: absolute;
+        left: 8px;
+        border-radius: 4px;
+        box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.4);
+        transition: top 0.3s ease;
+      }
+      .flag-cloth.up {
+        top: 20px;
+      }
+      .flag-cloth.down {
+        top: 120px;
+      }
+      .blue-flag {
+        background: linear-gradient(135deg, #2196F3, #1976D2);
+      }
+      .white-flag {
+        background: linear-gradient(135deg, #ffffff, #f0f0f0);
+        border: 2px solid #ddd;
+      }
+      .webcam-container {
+        position: relative;
+        background-color: white;
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
       }
       #canvas {
-        border: 1px solid #ccc;
-        border-radius: 4px;
+        border: 3px solid #333;
+        border-radius: 8px;
         display: block;
       }
       #max-prediction {
         position: absolute;
-        top: 10px;
+        top: 25px;
         left: 50%;
         transform: translateX(-50%);
-        background-color: rgba(0, 0, 0, 0.7);
+        background-color: rgba(0, 0, 0, 0.85);
         color: white;
-        padding: 8px 16px;
-        border-radius: 4px;
-        font-size: 16px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 20px;
         font-weight: bold;
         pointer-events: none;
+        display: none;
       }
       #label-container {
+        display: none;
+      }
+      .game-info-panel {
+        display: flex;
+        gap: 20px;
+        background-color: rgba(255, 255, 255, 0.95);
+        padding: 15px 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+      .info-item {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        min-width: 200px;
+        align-items: center;
+        gap: 5px;
       }
-      #label-container div {
-        padding: 8px;
-        background-color: #f5f5f5;
-        border-radius: 4px;
+      .info-label {
+        font-size: 14px;
+        color: #666;
+        font-weight: 600;
+      }
+      .info-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #2196F3;
+      }
+      .command-display {
+        display: none;
+      }
+      .timer-section {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .timer-bar-container {
+        width: 400px;
+        height: 20px;
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      .timer-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #4CAF50, #FFC107, #f44336);
+        border-radius: 10px;
+        transition: width 0.05s linear;
+        width: 100%;
+      }
+      .result-indicator {
+        font-size: 36px;
+        font-weight: bold;
+        min-width: 60px;
         text-align: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .result-indicator.show {
+        opacity: 1;
+      }
+      .result-indicator.success {
+        animation: success-bounce 0.5s ease;
+      }
+      .result-indicator.fail {
+        animation: fail-shake-indicator 0.5s ease;
+      }
+      @keyframes success-bounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.3); }
+      }
+      @keyframes fail-shake-indicator {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+      }
+      .game-over-screen {
+        display: none;
+        background-color: rgba(255, 255, 255, 0.98);
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        max-width: 600px;
+        text-align: center;
+      }
+      .game-over-screen.show {
+        display: block;
+      }
+      .game-over-title {
+        font-size: 36px;
+        font-weight: bold;
+        color: #f44336;
+        margin-bottom: 20px;
+      }
+      .final-stats {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        margin: 30px 0;
+      }
+      .stat-box {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 20px 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+      .stat-label {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-bottom: 8px;
+      }
+      .stat-value {
+        font-size: 48px;
+        font-weight: bold;
+      }
+      .records-table {
+        margin: 30px 0;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .records-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 15px;
+      }
+      .record-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 20px;
+        background-color: #f5f5f5;
+        border-radius: 8px;
+        margin-bottom: 8px;
+      }
+      .record-item:nth-child(1) {
+        background: linear-gradient(135deg, #FFD700, #FFA500);
+        color: white;
+        font-weight: bold;
+      }
+      .record-item:nth-child(2) {
+        background: linear-gradient(135deg, #C0C0C0, #A9A9A9);
+        color: white;
+        font-weight: bold;
+      }
+      .record-item:nth-child(3) {
+        background: linear-gradient(135deg, #CD7F32, #B8860B);
+        color: white;
+        font-weight: bold;
+      }
+      .record-rank {
+        font-weight: bold;
+        min-width: 30px;
+      }
+      .record-level {
+        font-size: 18px;
+      }
+      .record-time {
+        font-size: 14px;
+        opacity: 0.8;
+      }
+      .restart-btn {
+        margin-top: 20px;
+        padding: 15px 40px;
+        font-size: 18px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s;
+      }
+      .restart-btn:hover {
+        background-color: #45a049;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+      }
+      .level-up-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        animation: fadeIn 0.3s ease;
+      }
+      .level-up-overlay.show {
+        display: flex;
+      }
+      .level-up-content {
+        text-align: center;
+        color: white;
+        animation: zoomIn 0.5s ease;
+      }
+      .level-up-title {
+        font-size: 72px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        animation: pulse 1s ease infinite;
+      }
+      .level-up-message {
+        font-size: 36px;
+        margin-bottom: 30px;
+      }
+      .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #f0f;
+        animation: confetti-fall 3s ease-out forwards;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes zoomIn {
+        from { transform: scale(0.5); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+      @keyframes confetti-fall {
+        0% {
+          transform: translateY(-100vh) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh) rotate(720deg);
+          opacity: 0;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Teachable Machine Pose Model</h1>
-    <div class="button-container">
-      <button type="button" id="startBtn" onclick="init()">Start</button>
-      <button type="button" id="stopBtn" onclick="stop()" disabled>Stop</button>
+    <h1>🚩 AI 청기백기 챌린지 🏳️</h1>
+
+    <!-- 게임 상태 정보 -->
+    <div class="game-info-panel">
+      <div class="info-item">
+        <span class="info-label">단계</span>
+        <span class="info-value" id="level-display">1</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">성공</span>
+        <span class="info-value" id="success-count">0</span> / 5
+      </div>
+      <div class="info-item">
+        <span class="info-label">실패</span>
+        <span class="info-value" id="fail-count">0</span>
+      </div>
     </div>
-    <div class="canvas-container">
-      <canvas id="canvas"></canvas>
-      <div id="max-prediction"></div>
+
+    <!-- 명령 표시 영역 -->
+    <div class="command-display" id="command-display">
+      게임 시작 버튼을 눌러주세요
+    </div>
+
+    <!-- 타이머 바 & 결과 표시 -->
+    <div class="timer-section">
+      <div class="timer-bar-container">
+        <div class="timer-bar" id="timer-bar"></div>
+      </div>
+      <div class="result-indicator" id="result-indicator"></div>
+    </div>
+
+    <div class="button-container">
+      <button type="button" id="startBtn" onclick="startGame()">게임 시작</button>
+      <button type="button" id="stopBtn" onclick="stop()" disabled>중지</button>
+    </div>
+
+    <!-- 레벨업 오버레이 -->
+    <div class="level-up-overlay" id="level-up-overlay">
+      <div class="level-up-content">
+        <div class="level-up-title">🎉 레벨 업! 🎉</div>
+        <div class="level-up-message" id="level-up-message">레벨 2 달성!</div>
+      </div>
+    </div>
+
+    <!-- 게임 오버 화면 -->
+    <div class="game-over-screen" id="game-over-screen">
+      <div class="game-over-title">게임 오버!</div>
+      <div class="final-stats">
+        <div class="stat-box">
+          <div class="stat-label">최종 레벨</div>
+          <div class="stat-value" id="final-level">1</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">총 성공</div>
+          <div class="stat-value" id="total-success">0</div>
+        </div>
+      </div>
+      <div class="records-table">
+        <div class="records-title">세션 기록 (TOP 10)</div>
+        <div id="records-list"></div>
+      </div>
+      <button class="restart-btn" onclick="restartGame()">다시 시작</button>
+    </div>
+
+    <div class="game-container">
+      <!-- 백기 (왼쪽) -->
+      <div class="flag-container">
+        <div class="flag-label">백기 (왼손)</div>
+        <div class="flag">
+          <div class="flag-pole"></div>
+          <div class="flag-cloth white-flag down" id="white-flag"></div>
+        </div>
+      </div>
+
+      <!-- 웹캠 (중앙) -->
+      <div class="webcam-container">
+        <canvas id="canvas"></canvas>
+        <div id="max-prediction"></div>
+      </div>
+
+      <!-- 청기 (오른쪽) -->
+      <div class="flag-container">
+        <div class="flag-label">청기 (오른손)</div>
+        <div class="flag">
+          <div class="flag-pole"></div>
+          <div class="flag-cloth blue-flag down" id="blue-flag"></div>
+        </div>
+      </div>
     </div>
     <div id="label-container"></div>
 
@@ -90,15 +487,399 @@
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
 
     <script type="text/javascript">
-      // More API functions here:
-      // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/pose
-
-      // the link to your model provided by Teachable Machine export panel
+      // Teachable Machine Pose Model
       const URL = "./my_model/";
       let model, webcam, ctx, labelContainer, maxPredictions;
       let isRunning = false;
       let animationId = null;
 
+      // Flag state
+      let leftHandUp = false;
+      let rightHandUp = false;
+
+      // Prediction smoothing (moving average + hysteresis)
+      const PREDICTION_HISTORY_SIZE = 3; // 최근 3프레임 평균
+      let predictionHistory = [];
+
+      // Hysteresis thresholds
+      const THRESHOLD_HIGH = 0.75; // 손을 올렸다고 판정하는 임계값
+      const THRESHOLD_LOW = 0.60;  // 손을 내렸다고 판정하는 임계값
+
+      // Game state variables
+      let gameActive = false;
+      let currentLevel = 1;
+      let successCount = 0;
+      let failCount = 0;
+      let totalRounds = 5; // 각 단계당 5회
+      let minSuccessForNextLevel = 4; // 4회 이상 성공 필요
+      let totalSuccessThisGame = 0; // 이번 게임 총 성공 횟수
+      let gameStartTime = 0; // 게임 시작 시간
+
+      // Session records
+      let gameRecords = []; // 세션 동안의 게임 기록
+
+      // Command state
+      let currentCommand = null;
+      let commandStartTime = 0;
+      let timeLimit = 1.5; // 초 단위
+      let commandHistory = []; // 연속 명령 방지용
+
+      // Timer
+      let commandTimer = null;
+      let timerInterval = null;
+
+      // Pose detection stability
+      let correctPoseStartTime = 0;
+      let requiredStableDuration = 200; // 0.2초 연속 인식
+
+      // Command types with probabilities
+      const COMMANDS = {
+        LEFT_HAND: { text: "백기 올려!", hand: "left", type: "raise", className: "왼손올려", weight: 3 },
+        RIGHT_HAND: { text: "청기 올려!", hand: "right", type: "raise", className: "오른손올려", weight: 3 },
+        BOTH_HANDS: { text: "양기 올려!", hand: "both", type: "raise", className: "양손 올려", weight: 3 },
+        DONT_LEFT: { text: "백기 올리지 마!", hand: "left", type: "dont", className: "기본", weight: 1 },
+        DONT_RIGHT: { text: "청기 올리지 마!", hand: "right", type: "dont", className: "기본", weight: 1 },
+        DONT_BOTH: { text: "양기 올리지 마!", hand: "both", type: "dont", className: "기본", weight: 1 }
+      };
+
+      // TTS (Text-to-Speech) function
+      function speak(text) {
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ko-KR'; // Korean language
+        utterance.rate = 1.2; // Slightly faster for game pace
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+
+        window.speechSynthesis.speak(utterance);
+      }
+
+      // Calculate time limit based on level
+      function getTimeLimit(level) {
+        const baseTime = 1.5;
+        const reduction = (level - 1) * 0.1;
+        return Math.max(0.9, baseTime - reduction);
+      }
+
+      // Generate random command with weighted probability (avoid 3 consecutive same commands)
+      function generateCommand() {
+        const commandKeys = Object.keys(COMMANDS);
+        let newCommand;
+
+        // Create weighted array
+        const weightedCommands = [];
+        commandKeys.forEach(key => {
+          const weight = COMMANDS[key].weight;
+          for (let i = 0; i < weight; i++) {
+            weightedCommands.push(key);
+          }
+        });
+
+        do {
+          const randomIndex = Math.floor(Math.random() * weightedCommands.length);
+          newCommand = weightedCommands[randomIndex];
+        } while (
+          commandHistory.length >= 2 &&
+          commandHistory[commandHistory.length - 1] === newCommand &&
+          commandHistory[commandHistory.length - 2] === newCommand
+        );
+
+        commandHistory.push(newCommand);
+        if (commandHistory.length > 3) {
+          commandHistory.shift();
+        }
+
+        return COMMANDS[newCommand];
+      }
+
+      // Update flag positions
+      function updateFlags() {
+        const whiteFlag = document.getElementById("white-flag");
+        const blueFlag = document.getElementById("blue-flag");
+
+        if (leftHandUp) {
+          whiteFlag.classList.remove("down");
+          whiteFlag.classList.add("up");
+        } else {
+          whiteFlag.classList.remove("up");
+          whiteFlag.classList.add("down");
+        }
+
+        if (rightHandUp) {
+          blueFlag.classList.remove("down");
+          blueFlag.classList.add("up");
+        } else {
+          blueFlag.classList.remove("up");
+          blueFlag.classList.add("down");
+        }
+      }
+
+      // Update UI displays
+      function updateGameUI() {
+        document.getElementById("level-display").textContent = currentLevel;
+        document.getElementById("success-count").textContent = successCount;
+        document.getElementById("fail-count").textContent = failCount;
+        document.getElementById("time-limit").textContent = timeLimit.toFixed(1);
+      }
+
+      // Start timer bar animation
+      function startTimerBar() {
+        const timerBar = document.getElementById("timer-bar");
+        let elapsed = 0;
+        const updateInterval = 50; // 50ms마다 업데이트
+
+        if (timerInterval) clearInterval(timerInterval);
+
+        timerInterval = setInterval(() => {
+          elapsed += updateInterval;
+          const progress = 100 - (elapsed / (timeLimit * 1000)) * 100;
+          timerBar.style.width = Math.max(0, progress) + "%";
+
+          if (elapsed >= timeLimit * 1000) {
+            clearInterval(timerInterval);
+          }
+        }, updateInterval);
+      }
+
+      // Reset timer bar
+      function resetTimerBar() {
+        if (timerInterval) clearInterval(timerInterval);
+        document.getElementById("timer-bar").style.width = "100%";
+      }
+
+      // Check if current pose matches command
+      function checkPoseMatch() {
+        if (!currentCommand || !gameActive) return false;
+
+        const cmd = currentCommand;
+
+        // "올려" commands - must raise the specified flag(s) for 0.2s
+        if (cmd.type === "raise") {
+          if (cmd.hand === "left" && leftHandUp && !rightHandUp) {
+            return true;
+          } else if (cmd.hand === "right" && rightHandUp && !leftHandUp) {
+            return true;
+          } else if (cmd.hand === "both" && leftHandUp && rightHandUp) {
+            return true;
+          }
+        }
+
+        return false;
+      }
+
+      // Check if "올리지 마" command is violated
+      function checkDontCommandViolation() {
+        if (!currentCommand || !gameActive || currentCommand.type !== "dont") return false;
+
+        const cmd = currentCommand;
+
+        if (cmd.hand === "left") {
+          // 백기 올리지 마 - 왼손을 올리면 실패
+          return leftHandUp;
+        } else if (cmd.hand === "right") {
+          // 청기 올리지 마 - 오른손을 올리면 실패
+          return rightHandUp;
+        } else if (cmd.hand === "both") {
+          // 양기 올리지 마 - 둘 다 올리면 실패
+          return leftHandUp && rightHandUp;
+        }
+
+        return false;
+      }
+
+      // Handle command success
+      function handleSuccess() {
+        gameActive = false;
+        successCount++;
+        totalSuccessThisGame++; // 총 성공 횟수 증가
+
+        // Show success indicator
+        const resultIndicator = document.getElementById("result-indicator");
+        resultIndicator.textContent = "✅";
+        resultIndicator.className = "result-indicator show success";
+
+        resetTimerBar();
+        if (commandTimer) clearTimeout(commandTimer);
+
+        updateGameUI();
+
+        // Check if round is complete
+        setTimeout(() => {
+          // Hide result indicator
+          resultIndicator.className = "result-indicator";
+
+          if (successCount + failCount >= totalRounds) {
+            endRound();
+          } else {
+            issueNextCommand();
+          }
+        }, 1000);
+      }
+
+      // Handle command failure
+      function handleFailure() {
+        gameActive = false;
+        failCount++;
+
+        // Show fail indicator
+        const resultIndicator = document.getElementById("result-indicator");
+        resultIndicator.textContent = "❌";
+        resultIndicator.className = "result-indicator show fail";
+
+        resetTimerBar();
+        if (commandTimer) clearTimeout(commandTimer);
+
+        updateGameUI();
+
+        setTimeout(() => {
+          // Hide result indicator
+          resultIndicator.className = "result-indicator";
+
+          if (successCount + failCount >= totalRounds) {
+            endRound();
+          } else {
+            issueNextCommand();
+          }
+        }, 1000);
+      }
+
+      // Issue next command
+      function issueNextCommand() {
+        const delay = Math.random() * 500 + 500; // 0.5~1.0초 랜덤
+
+        setTimeout(() => {
+          currentCommand = generateCommand();
+          commandStartTime = Date.now();
+          correctPoseStartTime = 0;
+          gameActive = true;
+
+          const display = document.getElementById("command-display");
+          display.textContent = currentCommand.text;
+          display.className = "command-display";
+
+          // Speak the command
+          speak(currentCommand.text);
+
+          startTimerBar();
+
+          // Set timeout for completion
+          commandTimer = setTimeout(() => {
+            if (gameActive) {
+              // "올리지 마" 명령은 시간이 끝났을 때 위반하지 않았으면 성공
+              if (currentCommand.type === "dont") {
+                handleSuccess();
+              } else {
+                // "올려" 명령은 시간이 끝났을 때 실패
+                handleFailure();
+              }
+            }
+          }, timeLimit * 1000);
+        }, delay);
+      }
+
+      // End current round and check for level up
+      function endRound() {
+        const display = document.getElementById("command-display");
+
+        if (successCount >= minSuccessForNextLevel) {
+          // Level up!
+          currentLevel++;
+          timeLimit = getTimeLimit(currentLevel);
+
+          display.textContent = `🎉 레벨 ${currentLevel}로 승급!`;
+          display.className = "command-display success";
+
+          setTimeout(() => {
+            startNewRound();
+          }, 2000);
+        } else {
+          // Game over - save record and show game over screen
+          gameActive = false;
+
+          const gameEndTime = Date.now();
+          const playTime = Math.floor((gameEndTime - gameStartTime) / 1000); // 초 단위
+
+          // 기록 저장
+          gameRecords.push({
+            level: currentLevel,
+            totalSuccess: totalSuccessThisGame,
+            playTime: playTime,
+            timestamp: new Date().toLocaleString('ko-KR')
+          });
+
+          // 레벨 기준으로 정렬 (높은 레벨이 먼저)
+          gameRecords.sort((a, b) => b.level - a.level);
+
+          // 게임 오버 화면 표시
+          setTimeout(() => {
+            showGameOverScreen();
+          }, 1500);
+        }
+      }
+
+      // Show game over screen with records
+      function showGameOverScreen() {
+        // Hide game UI
+        document.querySelector('.game-info-panel').style.display = 'none';
+        document.querySelector('.timer-section').style.display = 'none';
+        document.querySelector('.button-container').style.display = 'none';
+        document.querySelector('.game-container').style.display = 'none';
+
+        // Update final stats
+        document.getElementById('final-level').textContent = currentLevel;
+        document.getElementById('total-success').textContent = totalSuccessThisGame;
+
+        // Show records
+        const recordsList = document.getElementById('records-list');
+        recordsList.innerHTML = '';
+
+        const topRecords = gameRecords.slice(0, 10);
+        topRecords.forEach((record, index) => {
+          const recordItem = document.createElement('div');
+          recordItem.className = 'record-item';
+
+          const minutes = Math.floor(record.playTime / 60);
+          const seconds = record.playTime % 60;
+          const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+          recordItem.innerHTML = `
+            <span class="record-rank">${index + 1}위</span>
+            <span class="record-level">레벨 ${record.level}</span>
+            <span class="record-time">${timeStr} | 성공 ${record.totalSuccess}회</span>
+          `;
+          recordsList.appendChild(recordItem);
+        });
+
+        // Show game over screen
+        document.getElementById('game-over-screen').classList.add('show');
+      }
+
+      // Restart game from game over screen
+      function restartGame() {
+        // Hide game over screen
+        document.getElementById('game-over-screen').classList.remove('show');
+
+        // Show game UI
+        document.querySelector('.game-info-panel').style.display = 'flex';
+        document.querySelector('.timer-section').style.display = 'flex';
+        document.querySelector('.button-container').style.display = 'flex';
+        document.querySelector('.game-container').style.display = 'flex';
+
+        // Start new game
+        startGame();
+      }
+
+      // Start new round
+      function startNewRound() {
+        successCount = 0;
+        failCount = 0;
+        updateGameUI();
+        issueNextCommand();
+      }
+
+      // Initialize webcam and model
       async function init() {
         const startBtn = document.getElementById("startBtn");
         const stopBtn = document.getElementById("stopBtn");
@@ -108,32 +889,54 @@
         const modelURL = URL + "model.json";
         const metadataURL = URL + "metadata.json";
 
-        // load the model and metadata
-        // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
-        // Note: the pose library adds a tmPose object to your window (window.tmPose)
         model = await tmPose.load(modelURL, metadataURL);
         maxPredictions = model.getTotalClasses();
 
-        // Convenience function to setup a webcam
-        const size = 200;
-        const flip = true; // whether to flip the webcam
-        webcam = new tmPose.Webcam(size, size, flip); // width, height, flip
-        await webcam.setup(); // request access to the webcam
+        const size = 400;
+        const flip = true;
+        webcam = new tmPose.Webcam(size, size, flip);
+        await webcam.setup();
         await webcam.play();
 
         isRunning = true;
         window.requestAnimationFrame(loop);
 
-        // append/get elements to the DOM
         const canvas = document.getElementById("canvas");
-        canvas.width = size; canvas.height = size;
+        canvas.width = size;
+        canvas.height = size;
         ctx = canvas.getContext("2d");
+
         labelContainer = document.getElementById("label-container");
-        for (let i = 0; i < maxPredictions; i++) { // and class labels
+        for (let i = 0; i < maxPredictions; i++) {
           labelContainer.appendChild(document.createElement("div"));
         }
 
         stopBtn.disabled = false;
+      }
+
+      // Start game
+      async function startGame() {
+        if (!isRunning) {
+          await init();
+        }
+
+        // Reset game state
+        currentLevel = 1;
+        successCount = 0;
+        failCount = 0;
+        totalSuccessThisGame = 0; // 총 성공 횟수 초기화
+        gameStartTime = Date.now(); // 게임 시작 시간 기록
+        timeLimit = getTimeLimit(currentLevel);
+        commandHistory = [];
+        predictionHistory = []; // 예측 히스토리 초기화
+
+        updateGameUI();
+        document.getElementById("startBtn").disabled = true;
+
+        // Start first command after brief delay
+        setTimeout(() => {
+          issueNextCommand();
+        }, 1000);
       }
 
       async function stop() {
@@ -141,6 +944,8 @@
         const stopBtn = document.getElementById("stopBtn");
 
         isRunning = false;
+        gameActive = false;
+
         if (animationId) {
           window.cancelAnimationFrame(animationId);
           animationId = null;
@@ -150,6 +955,16 @@
           webcam.stop();
         }
 
+        if (commandTimer) clearTimeout(commandTimer);
+        resetTimerBar();
+
+        leftHandUp = false;
+        rightHandUp = false;
+        updateFlags();
+
+        document.getElementById("command-display").textContent = "게임 시작 버튼을 눌러주세요";
+        document.getElementById("command-display").className = "command-display";
+
         startBtn.disabled = false;
         stopBtn.disabled = true;
       }
@@ -157,37 +972,109 @@
       async function loop(timestamp) {
         if (!isRunning) return;
 
-        webcam.update(); // update the webcam frame
+        webcam.update();
         await predict();
         animationId = window.requestAnimationFrame(loop);
       }
 
       async function predict() {
-        // Prediction #1: run input through posenet
-        // estimatePose can take in an image, video or canvas html element
         const { pose, posenetOutput } = await model.estimatePose(webcam.canvas);
-        // Prediction 2: run input through teachable machine classification model
         const prediction = await model.predict(posenetOutput);
 
-        // Find max probability prediction
-        let maxProb = 0;
-        let maxClass = "";
-        for (let i = 0; i < maxPredictions; i++) {
-          const classPrediction =
-            prediction[i].className + ": " + prediction[i].probability.toFixed(2);
-          labelContainer.childNodes[i].innerHTML = classPrediction;
+        // Add current prediction to history
+        predictionHistory.push(prediction);
+        if (predictionHistory.length > PREDICTION_HISTORY_SIZE) {
+          predictionHistory.shift();
+        }
 
-          if (prediction[i].probability > maxProb) {
-            maxProb = prediction[i].probability;
-            maxClass = prediction[i].className;
+        // Calculate average probabilities from history
+        const avgPrediction = {};
+        for (let i = 0; i < maxPredictions; i++) {
+          const className = prediction[i].className;
+          let sumProb = 0;
+
+          for (let j = 0; j < predictionHistory.length; j++) {
+            sumProb += predictionHistory[j][i].probability;
+          }
+
+          avgPrediction[className] = sumProb / predictionHistory.length;
+        }
+
+        // Update label container with averaged values
+        for (let i = 0; i < maxPredictions; i++) {
+          const className = prediction[i].className;
+          const avgProb = avgPrediction[className];
+          const classPrediction = className + ": " + avgProb.toFixed(2);
+          labelContainer.childNodes[i].innerHTML = classPrediction;
+        }
+
+        // Apply hysteresis for hand state changes
+        const leftProb = avgPrediction["왼손올려"] || 0;
+        const rightProb = avgPrediction["오른손올려"] || 0;
+        const bothProb = avgPrediction["양손 올려"] || 0;
+
+        // 왼손 판정 (hysteresis)
+        if (leftHandUp) {
+          // 이미 올라가 있으면 THRESHOLD_LOW 이하로 떨어져야 내림
+          if (leftProb < THRESHOLD_LOW && bothProb < THRESHOLD_LOW) {
+            leftHandUp = false;
+          }
+        } else {
+          // 내려가 있으면 THRESHOLD_HIGH 이상이어야 올림
+          if (leftProb >= THRESHOLD_HIGH || bothProb >= THRESHOLD_HIGH) {
+            leftHandUp = true;
           }
         }
 
-        // Display max prediction on canvas
-        const maxPredictionDiv = document.getElementById("max-prediction");
-        maxPredictionDiv.innerHTML = maxClass;
+        // 오른손 판정 (hysteresis)
+        if (rightHandUp) {
+          // 이미 올라가 있으면 THRESHOLD_LOW 이하로 떨어져야 내림
+          if (rightProb < THRESHOLD_LOW && bothProb < THRESHOLD_LOW) {
+            rightHandUp = false;
+          }
+        } else {
+          // 내려가 있으면 THRESHOLD_HIGH 이상이어야 올림
+          if (rightProb >= THRESHOLD_HIGH || bothProb >= THRESHOLD_HIGH) {
+            rightHandUp = true;
+          }
+        }
 
-        // finally draw the poses
+        // Update flags
+        updateFlags();
+
+        // Check if pose matches current command
+        if (gameActive && currentCommand) {
+          // For "올려" commands - check for correct pose
+          if (currentCommand.type === "raise") {
+            const isMatch = checkPoseMatch();
+
+            if (isMatch) {
+              // Start tracking stable duration
+              if (correctPoseStartTime === 0) {
+                correctPoseStartTime = Date.now();
+              } else {
+                const stableDuration = Date.now() - correctPoseStartTime;
+                if (stableDuration >= requiredStableDuration) {
+                  // Success!
+                  handleSuccess();
+                }
+              }
+            } else {
+              // Reset stable duration tracking
+              correctPoseStartTime = 0;
+            }
+          }
+          // For "올리지 마" commands - check for violation
+          else if (currentCommand.type === "dont") {
+            const isViolation = checkDontCommandViolation();
+            if (isViolation) {
+              // Immediate failure if violated
+              handleFailure();
+            }
+          }
+        }
+
+
         drawPose(pose);
       }
 
